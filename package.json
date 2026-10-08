@@ -5,7 +5,8 @@
   "description": "Real-time multiplayer aptitude and logical reasoning competition platform for college students",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "postinstall": "prisma generate",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
