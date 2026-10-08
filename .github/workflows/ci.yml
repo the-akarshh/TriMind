@@ -1,0 +1,68 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  test-and-build:
+    name: Test, Audit & Build
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgrespassword
+          POSTGRES_DB: aptitudearina_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Run TypeScript Type Check
+        run: npm run type-check
+
+      - name: Run Vitest Unit & Engine Test Suite
+        run: npm test
+        env:
+          NODE_ENV: test
+          DATABASE_URL: "postgresql://postgres:postgrespassword@localhost:5432/aptitudearina_test?schema=public"
+          JWT_SECRET: "ci_pipeline_test_jwt_secret_key_32bytes_min"
+
+      - name: Run Multi-Tier Concurrency Benchmark
+        run: npm run benchmark
+        env:
+          NODE_ENV: test
+
+      - name: Production Next.js Build
+        run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: 1
+          NODE_ENV: production
+          DATABASE_URL: "postgresql://postgres:postgrespassword@localhost:5432/aptitudearina_test?schema=public"
+          JWT_SECRET: "ci_pipeline_test_jwt_secret_key_32bytes_min"
+          NEXT_PUBLIC_APP_URL: "http://localhost:3000"
+          NEXT_PUBLIC_WS_URL: "ws://localhost:3000"

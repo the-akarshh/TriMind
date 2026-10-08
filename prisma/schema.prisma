@@ -1,0 +1,666 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  PLAYER
+  HOST
+  FACULTY
+  COLLEGE_ADMIN
+  SUPER_ADMIN
+}
+
+enum Topic {
+  QUANTITATIVE
+  LOGICAL
+  VERBAL
+  DATA_INTERPRETATION
+  GENERAL_REASONING
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+  EXPERT
+}
+
+enum Visibility {
+  PUBLIC
+  PRIVATE
+  COLLEGE_ONLY
+}
+
+enum GameMode {
+  CLASSIC
+  SPEED
+  TEAM_BATTLE
+  PRACTICE
+}
+
+enum RoomStatus {
+  LOBBY
+  IN_PROGRESS
+  QUESTION_ACTIVE
+  QUESTION_RESULT
+  FINISHED
+}
+
+enum GameQuestionStatus {
+  PENDING
+  ACTIVE
+  COMPLETED
+}
+
+enum PowerUpType {
+  FIFTY_FIFTY
+  REMOVE_TWO
+  DOUBLE_POINTS
+  TIME_FREEZE
+  SECOND_CHANCE
+}
+
+enum TournamentStatus {
+  UPCOMING
+  REGISTRATION
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum TournamentFormat {
+  SINGLE_ELIMINATION
+  ROUND_ROBIN
+  DOUBLE_ELIMINATION
+}
+
+enum MatchStatus {
+  SCHEDULED
+  PENDING
+  LIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum ChallengeStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  IN_PROGRESS
+  COMPLETED
+}
+
+model User {
+  id           String             @id @default(cuid())
+  name         String
+  email        String             @unique
+  passwordHash String
+  avatar       String?
+  role         Role               @default(PLAYER)
+  collegeId    String?
+  xp           Int                @default(0)
+  level        Int                @default(1)
+  currentStreak Int               @default(0)
+  longestStreak Int               @default(0)
+  lastStreakDate DateTime?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  college             College?                @relation(fields: [collegeId], references: [id], onDelete: SetNull)
+  memberships         CollegeMembership[]
+  questionSets        QuestionSet[]
+  hostedRooms         Room[]                  @relation("HostRooms")
+  roomPlayers         RoomPlayer[]
+  gameResults         GameResult[]
+  captainTeams        Team[]                  @relation("CaptainTeams")
+  dailyAttempts       DailyChallengeAttempt[]
+  leagueScores        LeaguePlayerScore[]
+  achievements        UserAchievement[]
+  topicScores         TopicPlayerScore[]
+  auditLogs           AuditLog[]
+
+  @@index([email])
+  @@index([role])
+  @@index([collegeId])
+}
+
+model College {
+  id        String   @id @default(cuid())
+  name      String
+  shortName String   @unique
+  logo      String?
+  location  String?
+  createdAt DateTime @default(now())
+
+  users                  User[]
+  memberships            CollegeMembership[]
+  questionSets           QuestionSet[]
+  rooms                  Room[]
+  leagues                League[]
+  collegeScores          LeagueCollegeScore[]
+  tournamentParticipants TournamentParticipant[]
+  challengesInitiated    CollegeChallenge[]      @relation("ChallengerCollege")
+  challengesReceived     CollegeChallenge[]      @relation("OpponentCollege")
+  tournamentMatches1     TournamentMatch[]       @relation("MatchCollege1")
+  tournamentMatches2     TournamentMatch[]       @relation("MatchCollege2")
+  tournamentMatchesWon   TournamentMatch[]       @relation("MatchWinner")
+
+  @@index([shortName])
+}
+
+model CollegeMembership {
+  id        String   @id @default(cuid())
+  userId    String
+  collegeId String
+  role      Role     @default(PLAYER)
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  college College @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, collegeId])
+  @@index([userId])
+  @@index([collegeId])
+}
+
+model QuestionSet {
+  id                String     @id @default(cuid())
+  title             String
+  description       String?
+  topic             Topic      @default(QUANTITATIVE)
+  difficulty        Difficulty @default(MEDIUM)
+  estimatedDuration Int        @default(15)
+  tags              String?
+  isArchived        Boolean    @default(false)
+  isPublished       Boolean    @default(true)
+  ownerId           String
+  collegeId         String?
+  visibility        Visibility @default(PUBLIC)
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  owner           User             @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  college         College?         @relation(fields: [collegeId], references: [id], onDelete: SetNull)
+  questions       Question[]
+  rooms           Room[]
+  dailyChallenges DailyChallenge[]
+
+  @@index([ownerId])
+  @@index([collegeId])
+  @@index([visibility])
+  @@index([isArchived])
+}
+
+model Question {
+  id            String     @id @default(cuid())
+  questionSetId String
+  text          String
+  explanation   String?
+  topic         Topic
+  difficulty    Difficulty @default(MEDIUM)
+  imageUrl      String?
+  tableData     String?
+  tags          String?
+  usageCount    Int        @default(0)
+  timeLimit     Int        @default(30)
+  points        Int        @default(100)
+  order         Int        @default(0)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  questionSet   QuestionSet      @relation(fields: [questionSetId], references: [id], onDelete: Cascade)
+  options       QuestionOption[]
+  gameQuestions GameQuestion[]
+
+  @@index([questionSetId])
+  @@index([topic])
+  @@index([difficulty])
+}
+
+model QuestionOption {
+  id         String   @id @default(cuid())
+  questionId String
+  text       String
+  imageUrl   String?
+  isCorrect  Boolean  @default(false)
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  answers  Answer[]
+
+  @@index([questionId])
+}
+
+model Room {
+  id                   String     @id @default(cuid())
+  code                 String     @unique
+  hostId               String
+  collegeId            String?
+  questionSetId        String
+  gameMode             GameMode   @default(CLASSIC)
+  timePerQuestion      Int?
+  questionCount        Int?
+  status               RoomStatus @default(LOBBY)
+  maxPlayers           Int        @default(50)
+  currentQuestionIndex Int        @default(0)
+  isAdaptive           Boolean    @default(false)
+  currentDifficulty    Difficulty @default(MEDIUM)
+  createdAt            DateTime   @default(now())
+  startedAt            DateTime?
+  endedAt              DateTime?
+
+  host          User           @relation("HostRooms", fields: [hostId], references: [id], onDelete: Cascade)
+  college       College?       @relation(fields: [collegeId], references: [id], onDelete: SetNull)
+  questionSet   QuestionSet    @relation(fields: [questionSetId], references: [id], onDelete: Restrict)
+  players       RoomPlayer[]
+  gameQuestions GameQuestion[]
+  answers       Answer[]
+  teams         Team[]
+  gameResults   GameResult[]
+
+  @@index([code])
+  @@index([hostId])
+  @@index([status])
+  @@index([collegeId])
+}
+
+model RoomPlayer {
+  id                String    @id @default(cuid())
+  roomId            String
+  userId            String?
+  displayName       String
+  score             Int       @default(0)
+  correctAnswers    Int       @default(0)
+  wrongAnswers      Int       @default(0)
+  answeredQuestions Int       @default(0)
+  totalAnswerTime   Float     @default(0.0)
+  connected         Boolean   @default(true)
+  joinedAt          DateTime  @default(now())
+  lastSeenAt        DateTime  @default(now())
+
+  room        Room             @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user        User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
+  answers     Answer[]
+  teamMember  TeamMember?
+  powerUps    PlayerPowerUp[]
+  gameResult  GameResult?
+
+  @@index([roomId])
+  @@index([userId])
+  @@index([score])
+}
+
+model GameQuestion {
+  id            String             @id @default(cuid())
+  roomId        String
+  questionId    String
+  questionIndex Int
+  startsAt      DateTime?
+  endsAt        DateTime?
+  correctAnswer String?
+  status        GameQuestionStatus @default(PENDING)
+
+  room     Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  question Question @relation(fields: [questionId], references: [id], onDelete: Restrict)
+  answers  Answer[]
+
+  @@unique([roomId, questionIndex])
+  @@index([roomId])
+  @@index([questionId])
+}
+
+model Answer {
+  id               String   @id @default(cuid())
+  roomId           String
+  gameQuestionId   String
+  playerId         String
+  selectedOptionId String?
+  submittedAt      DateTime @default(now())
+  serverReceivedAt DateTime @default(now())
+  isCorrect        Boolean
+  responseTime     Float
+  pointsAwarded    Int
+
+  room           Room            @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  gameQuestion   GameQuestion    @relation(fields: [gameQuestionId], references: [id], onDelete: Cascade)
+  player         RoomPlayer      @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  selectedOption QuestionOption? @relation(fields: [selectedOptionId], references: [id], onDelete: SetNull)
+
+  @@index([roomId])
+  @@index([gameQuestionId])
+  @@index([playerId])
+}
+
+model League {
+  id        String   @id @default(cuid())
+  name      String
+  season    String
+  startDate DateTime
+  endDate   DateTime
+  collegeId String?
+
+  college       College?             @relation(fields: [collegeId], references: [id], onDelete: SetNull)
+  playerScores  LeaguePlayerScore[]
+  collegeScores LeagueCollegeScore[]
+
+  @@index([collegeId])
+  @@index([startDate, endDate])
+}
+
+model LeaguePlayerScore {
+  id          String   @id @default(cuid())
+  leagueId    String
+  playerId    String
+  score       Int      @default(0)
+  gamesPlayed Int      @default(0)
+  accuracy    Float    @default(0.0)
+
+  league League @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  player User   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([leagueId, playerId])
+  @@index([leagueId])
+  @@index([playerId])
+  @@index([score])
+}
+
+model LeagueCollegeScore {
+  id          String   @id @default(cuid())
+  leagueId    String
+  collegeId   String
+  score       Int      @default(0)
+  gamesPlayed Int      @default(0)
+
+  league  League  @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  college College @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+
+  @@unique([leagueId, collegeId])
+  @@index([leagueId])
+  @@index([collegeId])
+  @@index([score])
+}
+
+model Tournament {
+  id            String            @id @default(cuid())
+  title         String
+  description   String?
+  season        String
+  status        TournamentStatus  @default(UPCOMING)
+  format        TournamentFormat  @default(SINGLE_ELIMINATION)
+  minColleges   Int               @default(4)
+  maxColleges   Int               @default(16)
+  startDate     DateTime
+  endDate       DateTime
+  prizePool     String?
+  questionSetId String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  matches      TournamentMatch[]
+  participants TournamentParticipant[]
+
+  @@index([status])
+  @@index([season])
+}
+
+model TournamentParticipant {
+  id           String     @id @default(cuid())
+  tournamentId String
+  collegeId    String
+  seed         Int
+  score        Int        @default(0)
+  eliminated   Boolean    @default(false)
+  createdAt    DateTime   @default(now())
+
+  tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  college    College    @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+
+  @@unique([tournamentId, collegeId])
+  @@index([tournamentId])
+  @@index([collegeId])
+}
+
+model TournamentMatch {
+  id              String      @id @default(cuid())
+  tournamentId    String
+  round           Int
+  matchNumber     Int
+  college1Id      String?
+  college2Id      String?
+  score1          Int         @default(0)
+  score2          Int         @default(0)
+  winnerCollegeId String?
+  roomId          String?
+  status          MatchStatus @default(PENDING)
+  scheduledAt     DateTime?
+  completedAt     DateTime?
+
+  tournament    Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  college1      College?   @relation("MatchCollege1", fields: [college1Id], references: [id], onDelete: SetNull)
+  college2      College?   @relation("MatchCollege2", fields: [college2Id], references: [id], onDelete: SetNull)
+  winnerCollege College?   @relation("MatchWinner", fields: [winnerCollegeId], references: [id], onDelete: SetNull)
+
+  @@index([tournamentId])
+  @@index([round])
+  @@index([college1Id])
+  @@index([college2Id])
+}
+
+model CollegeChallenge {
+  id                  String          @id @default(cuid())
+  challengerCollegeId String
+  opponentCollegeId   String
+  challengerUserId    String?
+  questionSetId       String?
+  status              ChallengeStatus @default(PENDING)
+  scheduledAt         DateTime?
+  roomId              String?
+  challengerScore     Int             @default(0)
+  opponentScore       Int             @default(0)
+  winnerCollegeId     String?
+  message             String?
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  challengerCollege College @relation("ChallengerCollege", fields: [challengerCollegeId], references: [id], onDelete: Cascade)
+  opponentCollege   College @relation("OpponentCollege", fields: [opponentCollegeId], references: [id], onDelete: Cascade)
+
+  @@index([challengerCollegeId])
+  @@index([opponentCollegeId])
+  @@index([status])
+}
+
+model Team {
+  id        String   @id @default(cuid())
+  roomId    String
+  name      String
+  captainId String?
+
+  room    Room         @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  captain User?        @relation("CaptainTeams", fields: [captainId], references: [id], onDelete: SetNull)
+  members TeamMember[]
+
+  @@index([roomId])
+}
+
+model TeamMember {
+  id       String @id @default(cuid())
+  teamId   String
+  playerId String @unique
+
+  team   Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  player RoomPlayer @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, playerId])
+  @@index([teamId])
+}
+
+model PowerUp {
+  id          String      @id @default(cuid())
+  name        String
+  type        PowerUpType
+  description String
+
+  playerPowerUps PlayerPowerUp[]
+
+  @@index([type])
+}
+
+model PlayerPowerUp {
+  id            String @id @default(cuid())
+  playerId      String
+  powerUpId     String
+  remainingUses Int    @default(1)
+
+  player  RoomPlayer @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  powerUp PowerUp    @relation(fields: [powerUpId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, powerUpId])
+  @@index([playerId])
+}
+
+model DailyChallenge {
+  id            String   @id @default(cuid())
+  date          DateTime @unique
+  questionSetId String
+
+  questionSet QuestionSet             @relation(fields: [questionSetId], references: [id], onDelete: Cascade)
+  attempts    DailyChallengeAttempt[]
+
+  @@index([date])
+}
+
+model DailyChallengeAttempt {
+  id            String   @id @default(cuid())
+  challengeId   String
+  playerId      String
+  score         Int
+  accuracy      Float
+  timeTaken     Float    @default(0.0)
+  attemptNumber Int      @default(1)
+  completedAt   DateTime @default(now())
+
+  challenge DailyChallenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  player    User           @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([challengeId, playerId])
+  @@index([challengeId])
+  @@index([playerId])
+}
+
+model GameResult {
+  id                  String   @id @default(cuid())
+  roomId              String
+  playerId            String   @unique
+  userId              String?
+  finalScore          Int
+  accuracy            Float
+  averageResponseTime Float
+  rank                Int
+  createdAt           DateTime @default(now())
+
+  room   Room       @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  player RoomPlayer @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  user   User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([roomId])
+  @@index([userId])
+  @@index([rank])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  metadata  String?
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+model Season {
+  id        String           @id @default(cuid())
+  name      String           @unique
+  startDate DateTime
+  endDate   DateTime
+  isActive  Boolean          @default(true)
+  isFrozen  Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  snapshots SeasonSnapshot[]
+
+  @@index([isActive])
+}
+
+model SeasonSnapshot {
+  id         String   @id @default(cuid())
+  seasonId   String
+  type       String   // "COLLEGE", "PLAYER", "TOPIC"
+  targetId   String
+  targetName String
+  rank       Int
+  finalScore Int
+  metadata   String?
+  createdAt  DateTime @default(now())
+
+  season Season @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+
+  @@index([seasonId])
+  @@index([type])
+}
+
+model Achievement {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  title       String
+  description String
+  icon        String
+  category    String   // "GAMES", "MASTERY", "STREAK", "SPECIAL"
+  targetValue Int      @default(1)
+  xpReward    Int      @default(50)
+
+  userAchievements UserAchievement[]
+
+  @@index([code])
+}
+
+model UserAchievement {
+  id            String      @id @default(cuid())
+  userId        String
+  achievementId String
+  progress      Int         @default(0)
+  unlocked      Boolean     @default(false)
+  unlockedAt    DateTime?
+  createdAt     DateTime    @default(now())
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievement Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, achievementId])
+  @@index([userId])
+}
+
+model TopicPlayerScore {
+  id                 String   @id @default(cuid())
+  userId             String
+  topic              Topic
+  season             String
+  score              Int      @default(0)
+  questionsAttempted Int      @default(0)
+  questionsCorrect   Int      @default(0)
+  accuracy           Float    @default(0.0)
+  updatedAt          DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, topic, season])
+  @@index([topic, season, score])
+  @@index([userId])
+}
