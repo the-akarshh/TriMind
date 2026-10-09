@@ -77,15 +77,19 @@ export function useArenaSocket(roomCode: string) {
       setState((prev) => ({ ...prev, isConnected: true, errorMessage: null }));
 
       // Check if we have stored reconnect tokens
-      const storedToken = sessionStorage.getItem(`arena_reconnect_${roomCode}`);
-      const storedPlayerId = sessionStorage.getItem(`arena_playerId_${roomCode}`);
+      try {
+        const storedToken = sessionStorage.getItem(`arena_reconnect_${roomCode}`);
+        const storedPlayerId = sessionStorage.getItem(`arena_playerId_${roomCode}`);
 
-      if (storedToken && storedPlayerId) {
-        socket.emit(WS_EVENTS.ROOM_RECONNECT, {
-          roomCode,
-          playerId: storedPlayerId,
-          reconnectToken: storedToken,
-        });
+        if (storedToken && storedPlayerId) {
+          socket.emit(WS_EVENTS.ROOM_RECONNECT, {
+            roomCode,
+            playerId: storedPlayerId,
+            reconnectToken: storedToken,
+          });
+        }
+      } catch {
+        // Ignore storage errors in restricted contexts
       }
     });
 
@@ -224,8 +228,12 @@ export function useArenaSocket(roomCode: string) {
         { roomCode, displayName, userId },
         (res: any) => {
           if (res?.success) {
-            sessionStorage.setItem(`arena_reconnect_${roomCode}`, res.reconnectToken);
-            sessionStorage.setItem(`arena_playerId_${roomCode}`, res.playerId);
+            try {
+              sessionStorage.setItem(`arena_reconnect_${roomCode}`, res.reconnectToken);
+              sessionStorage.setItem(`arena_playerId_${roomCode}`, res.playerId);
+            } catch {
+              // Ignore storage errors
+            }
             setState((prev) => ({
               ...prev,
               playerId: res.playerId,

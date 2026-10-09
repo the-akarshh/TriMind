@@ -45,9 +45,11 @@ export function StatCard({
           <p className="text-xs text-slate-400 mt-1 font-medium">{subValue}</p>
         )}
       </div>
-      <div className={cn("p-3 rounded-xl", iconBgClasses[variant])}>
-        <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
-      </div>
+      {Icon && (
+        <div className={cn("p-3 rounded-xl", iconBgClasses[variant])}>
+          <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
+        </div>
+      )}
     </div>
   );
 }

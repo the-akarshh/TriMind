@@ -150,7 +150,9 @@ function ArenaPlayContent() {
             <span className="text-xs font-mono font-bold text-violet-400">
               QUESTION {q.questionIndex} / {q.totalQuestions}
             </span>
-            <Badge variant="primary">{q.topic.replace(/_/g, " ")}</Badge>
+            <Badge variant="primary">
+              {q.topic ? q.topic.replace(/_/g, " ") : "GENERAL REASONING"}
+            </Badge>
             <button
               onClick={toggleFullscreen}
               className="p-1.5 rounded-lg border border-slate-800 bg-slate-900 text-slate-400 hover:text-white transition-colors ml-1"
@@ -234,7 +236,7 @@ function ArenaPlayContent() {
 
         {/* Shuffled Option Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-          {q.options.map((opt, idx) => {
+          {(q.options || []).map((opt, idx) => {
             const isSelected = state.selectedOptionId === opt.displayedId;
             return (
               <OptionCard
@@ -432,7 +434,7 @@ function ArenaPlayContent() {
         </div>
 
         <Leaderboard
-          players={state.leaderboard.map((e) => ({
+          players={(state.leaderboard || []).map((e) => ({
             rank: e.rank,
             id: e.playerId,
             displayName: `${e.displayName} ${
@@ -506,14 +508,14 @@ function ArenaPlayContent() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {Object.values(res.topicBreakdown).map((top) => (
+                  {Object.values(res.topicBreakdown || {}).map((top) => (
                     <div
                       key={top.topic}
                       className="p-4 rounded-xl bg-slate-800/40 border border-slate-700/60 space-y-2"
                     >
                       <div className="flex justify-between items-center">
                         <span className="text-xs font-bold text-white">
-                          {top.topic.replace(/_/g, " ")}
+                          {top.topic ? top.topic.replace(/_/g, " ") : "General"}
                         </span>
                         <Badge
                           variant={
@@ -580,7 +582,7 @@ function ArenaPlayContent() {
         <div className="space-y-3">
           <h3 className="text-base font-bold text-white">Final Room Standings</h3>
           <Leaderboard
-            players={state.leaderboard.map((e) => ({
+            players={(state.leaderboard || []).map((e) => ({
               rank: e.rank,
               id: e.playerId,
               displayName: e.displayName,
@@ -605,7 +607,15 @@ function ArenaPlayContent() {
     );
   }
 
-  return null;
+  return (
+    <div className="flex-1 flex flex-col items-center justify-center p-8 text-center min-h-[50vh]">
+      <div className="w-12 h-12 rounded-2xl bg-violet-600/20 border border-violet-500/40 flex items-center justify-center animate-pulse mb-3">
+        <Zap className="w-6 h-6 text-violet-400" />
+      </div>
+      <p className="text-sm font-bold text-white">Connecting to Arena Server...</p>
+      <p className="text-xs text-slate-400 mt-1">Room PIN: {roomCode}</p>
+    </div>
+  );
 }
 
 export default function ArenaPlayPage() {

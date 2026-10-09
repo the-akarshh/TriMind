@@ -155,7 +155,7 @@ export default function FacultyAnalyticsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {data.topicBreakdown.map((t) => {
+            {(data.topicBreakdown || []).map((t) => {
               const cleanTopic = t.topic.replace(/_/g, " ");
               const isLow = t.accuracy < 60;
               return (
@@ -191,7 +191,7 @@ export default function FacultyAnalyticsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {data.difficultyBreakdown.map((d) => (
+            {(data.difficultyBreakdown || []).map((d) => (
               <div key={d.difficulty} className="space-y-1.5">
                 <div className="flex items-center justify-between text-xs font-semibold">
                   <span className="text-slate-200">{d.difficulty}</span>
@@ -224,7 +224,7 @@ export default function FacultyAnalyticsPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {data.mostDifficultQuestions.map((q, idx) => (
+          {(data.mostDifficultQuestions || []).map((q, idx) => (
             <Card key={q.questionId || idx} className="border-rose-500/30 bg-rose-950/10">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-1.5">

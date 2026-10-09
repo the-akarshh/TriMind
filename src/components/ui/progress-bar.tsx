@@ -18,7 +18,9 @@ export function ProgressBar({
   showLabel = false,
   className,
 }: ProgressBarProps) {
-  const percentage = Math.min(100, Math.max(0, (value / max) * 100));
+  const safeValue = typeof value === "number" && !isNaN(value) ? value : 0;
+  const safeMax = typeof max === "number" && max > 0 ? max : 100;
+  const percentage = Math.min(100, Math.max(0, (safeValue / safeMax) * 100));
 
   const variantClasses = {
     primary: "bg-gradient-to-r from-violet-600 to-indigo-500",

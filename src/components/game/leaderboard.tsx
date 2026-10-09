@@ -27,7 +27,8 @@ export function Leaderboard({
   showPodium = true,
   className,
 }: LeaderboardProps) {
-  const top3 = showPodium ? players.slice(0, 3) : [];
+  const safePlayers = Array.isArray(players) ? players : [];
+  const top3 = showPodium ? safePlayers.slice(0, 3) : [];
 
   return (
     <div className={cn("flex flex-col space-y-6 w-full", className)}>
@@ -97,7 +98,7 @@ export function Leaderboard({
 
       {/* Full Leaderboard List (Handles 50+ players) */}
       <div className="rounded-2xl border border-slate-800 bg-slate-900/90 overflow-hidden divide-y divide-slate-800/80 max-h-[500px] overflow-y-auto">
-        {players.map((player) => {
+        {safePlayers.map((player) => {
           const isSelf = currentUserId === player.id;
           return (
             <div

@@ -78,9 +78,10 @@ function CreateRoomForm() {
         const res = await fetch("/api/questions");
         if (res.ok) {
           const data = await res.json();
-          setSets(data.sets);
-          if (!selectedSetId && data.sets.length > 0) {
-            setSelectedSetId(data.sets[0].id);
+          const loadedSets = data.sets || [];
+          setSets(loadedSets);
+          if (!selectedSetId && loadedSets.length > 0) {
+            setSelectedSetId(loadedSets[0].id);
           }
         }
       } catch (err) {

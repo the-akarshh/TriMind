@@ -34,6 +34,8 @@ export function LobbyDisplay({
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const safePlayers = Array.isArray(players) ? players : [];
+
   return (
     <div className="flex flex-col items-center w-full max-w-4xl mx-auto space-y-8 py-6 px-4">
       {/* Header Info */}
@@ -84,7 +86,7 @@ export function LobbyDisplay({
         <div className="flex items-center gap-2">
           <Users className="w-5 h-5 text-violet-400" />
           <h2 className="text-base font-bold text-white">
-            Players Joined ({players.length}/{maxPlayers})
+            Players Joined ({safePlayers.length}/{maxPlayers})
           </h2>
         </div>
         <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium">
@@ -95,7 +97,7 @@ export function LobbyDisplay({
 
       {/* Live Players Grid (Handles 50+ players) */}
       <div className="w-full min-h-[180px] max-h-[360px] overflow-y-auto p-4 rounded-2xl bg-slate-900/40 border border-slate-800/80">
-        {players.length === 0 ? (
+        {safePlayers.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-32 text-slate-400 text-center">
             <p className="text-sm">Waiting for players to enter the PIN...</p>
             <p className="text-xs text-slate-400 mt-1">
@@ -104,7 +106,7 @@ export function LobbyDisplay({
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-            {players.map((p) => (
+            {safePlayers.map((p) => (
               <div
                 key={p.id}
                 className="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-800/70 border border-slate-700/60 shadow"

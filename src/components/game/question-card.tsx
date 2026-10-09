@@ -39,8 +39,8 @@ export function QuestionCard({
     }
   }
 
-  const getDifficultyVariant = (d: string) => {
-    switch (d.toUpperCase()) {
+  const getDifficultyVariant = (d?: string) => {
+    switch ((d || "MEDIUM").toUpperCase()) {
       case "EASY":
         return "success";
       case "MEDIUM":
@@ -63,10 +63,10 @@ export function QuestionCard({
             Question {currentIndex} of {totalQuestions}
           </span>
           <Badge variant={getDifficultyVariant(difficulty)}>
-            {difficulty}
+            {difficulty || "MEDIUM"}
           </Badge>
           <Badge variant="secondary">
-            {topic.replace(/_/g, " ")}
+            {topic ? String(topic).replace(/_/g, " ") : "GENERAL REASONING"}
           </Badge>
         </div>
         <div className="px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/30 text-violet-400 font-mono text-xs font-bold">

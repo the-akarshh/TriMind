@@ -8,29 +8,34 @@ export const ROLE_HIERARCHY: Record<Role, number> = {
   SUPER_ADMIN: 5,
 };
 
-export function hasMinimumRole(userRole: Role, requiredRole: Role): boolean {
+export function hasMinimumRole(userRole?: Role, requiredRole?: Role): boolean {
+  if (!userRole || !requiredRole) return false;
   return (ROLE_HIERARCHY[userRole] ?? 0) >= (ROLE_HIERARCHY[requiredRole] ?? 0);
 }
 
-export function canCreateQuestionSets(role: Role): boolean {
+export function canCreateQuestionSets(role?: Role): boolean {
+  if (!role) return false;
   return ["HOST", "FACULTY", "COLLEGE_ADMIN", "SUPER_ADMIN"].includes(role);
 }
 
-export function canCreateRooms(role: Role): boolean {
+export function canCreateRooms(role?: Role): boolean {
+  if (!role) return false;
   return ["HOST", "FACULTY", "COLLEGE_ADMIN", "SUPER_ADMIN"].includes(role);
 }
 
-export function canAccessFacultyAnalytics(role: Role): boolean {
+export function canAccessFacultyAnalytics(role?: Role): boolean {
+  if (!role) return false;
   return ["FACULTY", "COLLEGE_ADMIN", "SUPER_ADMIN"].includes(role);
 }
 
 export const canViewAnalytics = canAccessFacultyAnalytics;
 
-export function canManageCollege(role: Role): boolean {
+export function canManageCollege(role?: Role): boolean {
+  if (!role) return false;
   return ["COLLEGE_ADMIN", "SUPER_ADMIN"].includes(role);
 }
 
-export function canAccessSuperAdmin(role: Role): boolean {
+export function canAccessSuperAdmin(role?: Role): boolean {
   return role === "SUPER_ADMIN";
 }
 

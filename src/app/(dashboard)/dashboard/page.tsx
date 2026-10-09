@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { LoadingState } from "@/components/ui/loading-state";
+import { ErrorState } from "@/components/ui/error-state";
 import {
   Gamepad2,
   Trophy,
@@ -50,7 +51,15 @@ export default function PlayerDashboard() {
   }
 
   if (!stats) {
-    return null;
+    return (
+      <div className="py-12">
+        <ErrorState
+          title="Placement Metrics Unavailable"
+          message="Could not load your placement statistics at this time."
+          onRetry={() => window.location.reload()}
+        />
+      </div>
+    );
   }
 
   return (
@@ -67,7 +76,7 @@ export default function PlayerDashboard() {
             </Badge>
           </div>
           <p className="text-xs text-slate-400">
-            {stats.collegeName} • Placement Prep Season
+            {stats.collegeName || "Collegiate Placement Arena"} • Placement Prep Season
           </p>
         </div>
 
@@ -146,11 +155,11 @@ export default function PlayerDashboard() {
               DAILY BLITZ CHALLENGE
             </Badge>
             <span className="text-xs text-amber-400 font-bold font-mono">
-              +{stats.dailyChallenge.points} BONUS PTS
+              +{stats.dailyChallenge?.points || 250} BONUS PTS
             </span>
           </div>
           <h3 className="text-lg font-bold text-white">
-            {stats.dailyChallenge.title}
+            {stats.dailyChallenge?.title || "Daily Speed Math & Reasoning Sprint"}
           </h3>
           <p className="text-xs text-slate-400 max-w-xl leading-relaxed">
             Quick 5-question speed trial designed to evaluate rapid pattern recognition and calculation agility.
@@ -178,7 +187,7 @@ export default function PlayerDashboard() {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            {stats.topicStrengths.map((item) => (
+            {(stats.topicStrengths || []).map((item) => (
               <div key={item.topic} className="space-y-1.5">
                 <div className="flex justify-between text-xs font-semibold text-slate-300">
                   <span>{item.topic}</span>
@@ -204,7 +213,7 @@ export default function PlayerDashboard() {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            {stats.topicWeaknesses.map((item) => (
+            {(stats.topicWeaknesses || []).map((item) => (
               <div key={item.topic} className="p-3 rounded-xl bg-slate-800/40 border border-slate-700/60 space-y-2">
                 <div className="flex justify-between text-xs font-semibold text-slate-200">
                   <span>{item.topic}</span>
@@ -247,7 +256,7 @@ export default function PlayerDashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60">
-                {stats.recentGames.map((game) => (
+                {(stats.recentGames || []).map((game) => (
                   <tr key={game.id} className="hover:bg-slate-800/30 transition-colors">
                     <td className="px-4 py-3.5 font-bold text-white max-w-xs truncate">
                       {game.title}
@@ -258,7 +267,7 @@ export default function PlayerDashboard() {
                     </td>
                     <td className="px-4 py-3.5 text-center">
                       <span className="inline-block px-2 py-0.5 rounded bg-slate-800 text-slate-200 font-bold font-mono">
-                        #{game.rank} / {game.totalPlayers}
+                        #{game.rank} / {game.totalPlayers || 50}
                       </span>
                     </td>
                     <td className="px-4 py-3.5 text-right font-mono font-bold text-emerald-400">

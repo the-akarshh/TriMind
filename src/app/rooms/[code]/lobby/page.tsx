@@ -19,6 +19,7 @@ export default function RoomLobbyPage() {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [isStarting, setIsStarting] = React.useState(false);
+  const [selectedTeam, setSelectedTeam] = React.useState<"alpha" | "beta">("alpha");
 
   const fetchRoomState = React.useCallback(async () => {
     try {
@@ -86,7 +87,6 @@ export default function RoomLobbyPage() {
 
   const isHost = user?.id === room.hostId || user?.role === "HOST" || user?.role === "SUPER_ADMIN";
   const isTeamBattle = room.gameMode === "TEAM_BATTLE";
-  const [selectedTeam, setSelectedTeam] = React.useState<"alpha" | "beta">("alpha");
 
   return (
     <div className="flex-1 flex flex-col justify-center py-6 space-y-6">

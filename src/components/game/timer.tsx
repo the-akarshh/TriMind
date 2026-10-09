@@ -16,9 +16,11 @@ export function Timer({
   remainingSeconds,
   className,
 }: TimerProps) {
-  const fraction = Math.max(0, remainingSeconds / totalSeconds);
-  const isUrgent = remainingSeconds <= 5;
-  const isWarning = remainingSeconds <= 10 && remainingSeconds > 5;
+  const safeTotal = typeof totalSeconds === "number" && totalSeconds > 0 ? totalSeconds : 30;
+  const safeRemaining = typeof remainingSeconds === "number" ? Math.max(0, remainingSeconds) : 0;
+  const fraction = Math.max(0, Math.min(1, safeRemaining / safeTotal));
+  const isUrgent = safeRemaining <= 5;
+  const isWarning = safeRemaining <= 10 && safeRemaining > 5;
 
   return (
     <div

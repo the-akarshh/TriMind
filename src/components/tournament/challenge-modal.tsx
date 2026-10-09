@@ -12,7 +12,9 @@ interface ChallengeModalProps {
 }
 
 export function ChallengeModal({ isOpen, onClose, onCreated }: ChallengeModalProps) {
-  const [opponentId, setOpponentId] = React.useState(SAMPLE_COLLEGES[1].collegeId);
+  const [opponentId, setOpponentId] = React.useState(
+    SAMPLE_COLLEGES[1]?.collegeId || SAMPLE_COLLEGES[0]?.collegeId || ""
+  );
   const [message, setMessage] = React.useState("Our cadet squadron challenges your campus to a 15-question speed clash!");
   const [scheduledAt, setScheduledAt] = React.useState("");
   const [submitting, setSubmitting] = React.useState(false);

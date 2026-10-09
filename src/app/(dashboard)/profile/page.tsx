@@ -167,13 +167,13 @@ export default function ProfilePage() {
                 <CardTitle className="text-base font-bold">Placement Medals & Achievements</CardTitle>
               </div>
               <Badge variant="outline">
-                {progression.achievements.filter((a) => a.unlocked).length} / {progression.achievements.length} Unlocked
+                {(progression.achievements || []).filter((a) => a.unlocked).length} / {(progression.achievements || []).length} Unlocked
               </Badge>
             </div>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {progression.achievements.map((ach) => (
+              {(progression.achievements || []).map((ach) => (
                 <div
                   key={ach.code}
                   className={`p-3.5 rounded-xl border transition-all flex items-start gap-3.5 ${

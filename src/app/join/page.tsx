@@ -54,7 +54,11 @@ export default function JoinRoomPage() {
       }
 
       // Store player session in sessionStorage for room lobby
-      sessionStorage.setItem("arena_player", JSON.stringify(data.player));
+      try {
+        sessionStorage.setItem("arena_player", JSON.stringify(data.player));
+      } catch {
+        // Ignore storage errors in restricted contexts
+      }
       router.push(`/rooms/${cleanCode}/lobby`);
     } catch (err: any) {
       setError(err.message || "Failed to join competition room.");

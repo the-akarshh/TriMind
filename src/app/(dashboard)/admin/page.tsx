@@ -102,7 +102,7 @@ export default function AdminDashboardPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60">
-                {users.map((u) => (
+                {(users || []).map((u) => (
                   <tr key={u.id} className="hover:bg-slate-800/30">
                     <td className="px-4 py-3.5 font-bold text-white">{u.name}</td>
                     <td className="px-4 py-3.5 text-slate-300 font-mono">{u.email}</td>

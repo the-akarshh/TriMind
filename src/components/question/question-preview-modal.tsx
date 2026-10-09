@@ -35,14 +35,14 @@ export function QuestionPreviewModal({
 }: QuestionPreviewModalProps) {
   const [selectedIdx, setSelectedIdx] = React.useState<number | null>(null);
   const [revealed, setRevealed] = React.useState(false);
-  const [timeLeft, setTimeLeft] = React.useState(question.timeLimit || 30);
+  const [timeLeft, setTimeLeft] = React.useState(question?.timeLimit || 30);
 
   // Reset state on open or question change
   React.useEffect(() => {
     if (isOpen) {
       setSelectedIdx(null);
       setRevealed(false);
-      setTimeLeft(question.timeLimit || 30);
+      setTimeLeft(question?.timeLimit || 30);
     }
   }, [isOpen, question]);
 
@@ -86,7 +86,7 @@ export function QuestionPreviewModal({
           <div className="flex items-center gap-2">
             <span className="font-bold text-slate-300">Live Simulator</span>
             <span className="font-mono text-violet-400 font-bold">
-              Time: {timeLeft}s / {question.timeLimit}s
+              Time: {timeLeft}s / {question?.timeLimit || 30}s
             </span>
           </div>
           <div className="flex items-center gap-2">

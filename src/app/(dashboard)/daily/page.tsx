@@ -177,7 +177,7 @@ export default function DailyChallengePage() {
             </Badge>
           </div>
           <p className="text-xs text-slate-400">
-            {challenge?.description}
+            {challenge?.description || "Daily speed trial across core logical and quantitative concepts."}
           </p>
         </div>
 
@@ -198,10 +198,10 @@ export default function DailyChallengePage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold text-violet-400 bg-violet-950/60 px-3 py-1 rounded-full border border-violet-800/40">
-                  Question {currentIndex + 1} of {challenge?.questions.length}
+                  Question {currentIndex + 1} of {challenge?.questions?.length || 10}
                 </span>
                 <span className="text-xs text-slate-400 font-mono">
-                  {currentQ.topic}
+                  {currentQ.topic ? currentQ.topic.replace(/_/g, " ") : "GENERAL REASONING"}
                 </span>
               </div>
 
@@ -219,7 +219,7 @@ export default function DailyChallengePage() {
 
             {/* Options Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-              {currentQ.options.map((opt, idx) => (
+              {(currentQ.options || []).map((opt, idx) => (
                 <OptionCard
                   key={opt.id || idx}
                   index={idx}
@@ -295,7 +295,9 @@ export default function DailyChallengePage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-amber-400" />
-                <CardTitle className="text-base font-bold">{challenge?.title}</CardTitle>
+                <CardTitle className="text-base font-bold">
+                  {challenge?.title || "Daily Placement Blitz"}
+                </CardTitle>
               </div>
               <Badge variant="outline">10 Questions • 4 Mins</Badge>
             </div>
