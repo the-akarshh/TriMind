@@ -15,10 +15,28 @@ export function initSocketServer(
   httpServer: HTTPServer,
   engine: MultiplayerGameEngine = gameEngine
 ): SocketIOServer {
+  const allowedOrigins = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(",").map((s) => s.trim())
+    : [
+        "https://tri-mind.vercel.app",
+        process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+        "http://localhost:3000",
+      ];
+
   const io = new SocketIOServer(httpServer, {
     cors: {
-      origin: "*",
+      origin: (origin, callback) => {
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.includes("*") || allowedOrigins.includes(origin)) {
+          return callback(null, true);
+        }
+        if (origin.endsWith(".vercel.app") || origin.startsWith("http://localhost")) {
+          return callback(null, true);
+        }
+        return callback(null, true);
+      },
       methods: ["GET", "POST"],
+      credentials: true,
     },
     pingInterval: 10000,
     pingTimeout: 5000,

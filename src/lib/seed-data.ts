@@ -39,7 +39,7 @@ export const DEMO_COLLEGE = {
 
 // Password for all demo accounts is Password123!
 // Pre-computed bcrypt hash of "Password123!" with 10 salt rounds:
-export const DEMO_PASSWORD_HASH = "$2a$10$7zD5sRkEsh8sM2Q0j/4Jp.0x0U7u6sXUf8B7.tJpZz5aGk9W8O8iq";
+export const DEMO_PASSWORD_HASH = "$2a$10$lracWu49cbENBKYuc.WFy.4C4T5MMnXCpAvpm26/EwOXJ3Xvvkbua";
 
 export const DEMO_USERS = [
   {

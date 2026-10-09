@@ -14,8 +14,16 @@ interface MemoryUser {
   createdAt: string;
 }
 
-// In-memory runtime cache for development environments without a live PostgreSQL instance
-const memoryUsers: MemoryUser[] = [...DEMO_USERS];
+declare global {
+  // eslint-disable-next-line no-var
+  var __arena_memoryUsers: MemoryUser[] | undefined;
+}
+
+// In-memory runtime cache for environments without a live PostgreSQL instance
+const memoryUsers: MemoryUser[] = globalThis.__arena_memoryUsers ?? [...DEMO_USERS];
+if (!globalThis.__arena_memoryUsers) {
+  globalThis.__arena_memoryUsers = memoryUsers;
+}
 
 export async function registerUser(input: RegisterInput): Promise<SafeUser> {
   const existingInMemory = memoryUsers.find(
@@ -97,11 +105,12 @@ export async function registerUser(input: RegisterInput): Promise<SafeUser> {
 }
 
 export async function loginUser(input: LoginInput): Promise<SafeUser> {
+  const normalizedEmail = (input.email || "").toLowerCase().trim();
   let user: any = null;
 
   try {
     user = await prisma.user.findUnique({
-      where: { email: input.email.toLowerCase() },
+      where: { email: normalizedEmail },
       include: { college: true },
     });
   } catch {
@@ -110,7 +119,7 @@ export async function loginUser(input: LoginInput): Promise<SafeUser> {
   }
 
   if (!user) {
-    user = memoryUsers.find((u) => u.email.toLowerCase() === input.email.toLowerCase());
+    user = memoryUsers.find((u) => u.email.toLowerCase().trim() === normalizedEmail);
   }
 
   if (!user) {

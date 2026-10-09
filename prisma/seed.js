@@ -10,7 +10,7 @@ const DEMO_COLLEGE = {
   location: "Bangalore, India",
 };
 
-const DEMO_PASSWORD_HASH = "$2a$10$7zD5sRkEsh8sM2Q0j/4Jp.0x0U7u6sXUf8B7.tJpZz5aGk9W8O8iq";
+const DEMO_PASSWORD_HASH = "$2a$10$lracWu49cbENBKYuc.WFy.4C4T5MMnXCpAvpm26/EwOXJ3Xvvkbua";
 
 const USERS = [
   { id: "usr-admin-1", name: "System Admin", email: "admin@arena.edu", role: "SUPER_ADMIN" },

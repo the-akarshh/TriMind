@@ -63,12 +63,38 @@ export function useArenaSocket(roomCode: string) {
   useEffect(() => {
     if (!roomCode) return;
 
-    const socketUrl = process.env.NEXT_PUBLIC_WS_URL || window.location.origin;
+    // Prioritize dedicated persistent WebSocket server (NEXT_PUBLIC_SOCKET_URL), then legacy NEXT_PUBLIC_WS_URL
+    const configuredSocketUrl =
+      process.env.NEXT_PUBLIC_SOCKET_URL || process.env.NEXT_PUBLIC_WS_URL;
+
+    // Detect if running on Vercel without a configured persistent socket host
+    const isVercelHost =
+      typeof window !== "undefined" &&
+      window.location.hostname.includes("vercel.app");
+
+    if (isVercelHost && !configuredSocketUrl) {
+      // Vercel serverless functions do not support persistent WebSockets.
+      // Inform the client with a bounded, clear notification rather than attempting invalid handshakes.
+      setState((prev) => ({
+        ...prev,
+        isConnected: false,
+        errorMessage:
+          "Multiplayer sync server (NEXT_PUBLIC_SOCKET_URL) is not configured. Real-time synchronization requires a persistent host (e.g. Render/Railway).",
+      }));
+      return;
+    }
+
+    const socketUrl =
+      configuredSocketUrl ||
+      (typeof window !== "undefined" ? window.location.origin : "http://localhost:3000");
+
     const socket = io(socketUrl, {
+      path: "/socket.io",
       transports: ["websocket", "polling"],
       autoConnect: true,
-      reconnectionAttempts: 10,
-      reconnectionDelay: 1000,
+      reconnectionAttempts: 3,
+      reconnectionDelay: 1500,
+      timeout: 8000,
     });
 
     socketRef.current = socket;
@@ -92,6 +118,25 @@ export function useArenaSocket(roomCode: string) {
         // Ignore storage errors in restricted contexts
       }
     });
+
+    socket.on("connect_error", (err: any) => {
+      setState((prev) => ({
+        ...prev,
+        isConnected: false,
+        errorMessage: `Multiplayer connection error: ${err.message || "Failed to reach server"}`,
+      }));
+    });
+
+    if (socket.io) {
+      socket.io.on("reconnect_failed", () => {
+        setState((prev) => ({
+          ...prev,
+          isConnected: false,
+          errorMessage:
+            "Multiplayer server unreachable after 3 attempts. Please verify NEXT_PUBLIC_SOCKET_URL.",
+        }));
+      });
+    }
 
     socket.on("disconnect", () => {
       setState((prev) => ({ ...prev, isConnected: false }));
